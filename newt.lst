@@ -1,4 +1,6 @@
+c_gmtime.c
 main.c
 net.c
+sntp.c
 uart.c
 

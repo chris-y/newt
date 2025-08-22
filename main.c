@@ -14,6 +14,7 @@
 #include "error.h"
 #include "main.h"
 #include "net.h"
+#include "sntp.h"
 #include "uart.h" // for IO_153B
 
 #define RTM_28MHZ 3 // from manual
@@ -187,6 +188,9 @@ int main(int argc, char **argv)
 				if(!quiet) printf("ESP information:\n");
 				print_cmd(at_gmr);
 			}
+			
+			if(stricmp(argv[command_at], "sntp") == 0) sntp_test();
+			
 		}
 
 		if(argc >= (command_at + 2)) {

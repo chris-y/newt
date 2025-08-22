@@ -2,6 +2,8 @@
 
 #include <arch/zxn.h>
 
+#include <string.h>
+
 #include "main.h"
 #include "uart.h"
 
@@ -24,6 +26,17 @@ void uart_tx_string(unsigned char *s)
         }
 }
 
+void uart_tx_bin(unsigned char *s, unsigned int size)
+{
+	if(size == 0) return;
+
+        do {
+                while (IO_133B & 0x02)
+                        user_break();
+                IO_133B = *s++;
+        } while (size--);
+}
+
 unsigned char uart_rx(void)
 {
         while (!(IO_133B & 0x01))
@@ -32,7 +45,7 @@ unsigned char uart_rx(void)
         return(IO_143B);
 }
 
-unsigned int uart_rx_line(char *buffer, unsigned int bufsize)
+unsigned int uart_rx_line(unsigned char *buffer, unsigned int bufsize)
 {
 	unsigned int i = 0;
 	unsigned int bufsz = bufsize - 1; // take into account NUL-termination
