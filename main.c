@@ -17,6 +17,7 @@
 #include "uart.h" // for IO_153B
 
 #define RTM_28MHZ 3 // from manual
+#define NEWT_VER "0.1"
 
 static unsigned char old_cpu_speed;
 static unsigned char old_uart;
@@ -42,6 +43,12 @@ static void cleanup(void)
 static void print_usage(void)
 {
 	printf(".newt [-qv] <command> [args]\n\n");
+	printf("-q            quiet\n");
+        printf("-v            verbose\n);
+	printf("\nCommands:\n");
+	printf("ip            show ip addr\n");
+	printf("info          show esp firmware\n");
+	printf("lookup <fqdn> lookup ip for fqdn\n");
 	exit(0);
 }
 
@@ -178,7 +185,7 @@ int main(int argc, char **argv)
 				command_at = 2;
 			}
 
-		if(!quiet) printf("newt by Chris Young 2025\n\n");
+		if(!quiet) printf("newt %s by Chris Young 2025\nhttps://github.com/chris-y/newt\n\n", NEWT_VER);
 
 		if(argc >= (command_at + 1)) {
 			if(stricmp(argv[command_at], "ip") == 0) print_ip();
