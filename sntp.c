@@ -50,14 +50,17 @@ void sntp_sync(void)
 	
 	printf("pkt recvd:\n");
 	for(unsigned int i = 0; i < sizeof(struct ntp_pkt); i++) {
-		printf("%x ", (char)pkt[i]);
+		printf("%x ", (char)pkt[i]); // nonsense data
 	}
 
-	printf("\ntxtime: %lu\n", pkt->transmit_time_s);
+	printf("\ntxtime: %lu\n", pkt->transmit_time_s); // this doesn't appear to be what is in the packet
 	printf("stratum: %u\n", pkt->stratum);
 
 	mini_gmtime_r(pkt->transmit_time_s, &tms);
 	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
+
+
+	free(pkt);
 }
 
 void sntp_test(void)
