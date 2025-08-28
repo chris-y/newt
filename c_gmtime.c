@@ -29,20 +29,20 @@ typedef char static_assert_time_t_is_signed[(time_t)-1 < 0 ? 1 : -1];
  * + tm_yday*86400 + (tm_year-70)*31536000 + ((tm_year-69)/4)*86400 -
  * ((tm_year-1)/100)*86400 + ((tm_year+299)/400)*86400.
  */
-struct tm *mini_gmtime_r(time_t ts, struct tm *tm) {
+struct tm *mini_gmtime_r(int32_t ts, struct tm *tm) {
   //const time_t ts = *timep;
-  time_t t = ts / 86400;
-  unsigned hms = ts % 86400;  /* -86399 <= hms <= 86399. This needs sizeof(int) >= 4. */
-  time_t c, f;
+  int32_t t = ts / 86400;
+  uint32_t hms = ts % 86400;  /* -86399 <= hms <= 86399. This needs sizeof(int) >= 4. */
+  int32_t c, f;
   unsigned yday;  /* 0 <= yday <= 426. Also fits to an `unsigned short', but `int' is faster. */
   unsigned a;  /* 0 <= a <= 2133. Also fits to an `unsigned short', but `int' is faster. */
-  if ((int)hms < 0) { --t; hms += 86400; }  /* Fix quotient and negative remainder if ts was negative (i.e. before year 1970 CE). */
+  if ((int32_t)hms < 0) { --t; hms += 86400; }  /* Fix quotient and negative remainder if ts was negative (i.e. before year 1970 CE). */
   /* Now: -24856 <= t <= 24855. */
   tm->tm_sec = hms % 60;
   hms /= 60;
   tm->tm_min = hms % 60;
   tm->tm_hour = hms / 60;
-  if (sizeof(time_t) > 4) {  /* Optimization. For int32_t, this would keep t intact, so we won't have to do it. This produces unreachable code. */
+  if (sizeof(int32_t) > 4) {  /* Optimization. For int32_t, this would keep t intact, so we won't have to do it. This produces unreachable code. */
     f = (t + 4) % 7;
     if (f < 0) f += 7;  /* Fix negative remainder if (t + 4) was negative. */
     /* Now 0 <= f <= 6. */
@@ -84,7 +84,7 @@ struct tm *mini_gmtime_r(time_t ts, struct tm *tm) {
      * years only 2000 is divisble by 100, and that's a leap year, no we
      * optimize the check to `(c & 3) == 0' only.
      */
-    if (!((c & 3) == 0 && (sizeof(time_t) <= 4 || c % 100 != 0 || (c + 300) % 400 == 0))) --yday;  /* These `== 0' comparisons work even if c < 0. */
+    if (!((c & 3) == 0 && (sizeof(int32_t) <= 4 || c % 100 != 0 || (c + 300) % 400 == 0))) --yday;  /* These `== 0' comparisons work even if c < 0. */
   }
   tm->tm_year = c;  /* This assignment may overflow or underflow, we don't check it. Example: time_t is a huge int64_t, tm->tm_year is int32_t. */
   /* Now: 0 <= tm->tm_mon <= 11. */

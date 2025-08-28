@@ -5,5 +5,5 @@
 #include <time.h>
 #include <sys/time.h>
 
-struct tm *mini_gmtime_r(time_t ts, struct tm *tm);
+struct tm *mini_gmtime_r(int32_t ts, struct tm *tm);
 #endif
