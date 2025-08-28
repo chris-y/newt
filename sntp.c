@@ -34,9 +34,14 @@ struct ntp_pkt {
 #define SET_NTP_VN(PKT,VN) PKT->li_vn_mode |= ((VN & 0x7) << 3)
 #define SET_NTP_MODE(PKT,MODE) PKT->li_vn_mode |= ((MODE & 0x7))
 
+
+#define SWAP_ENDIAN(VAL) (((0xFF000000 & VAL) >> 24) | ((0x00FF0000 & VAL) >> 8) | \
+						((0x0000FF00 & VAL) << 8) | ((0x000000FF & VAL) << 24))
+
 void sntp_sync(void)
 {
 	struct ntp_pkt *pkt = calloc(sizeof(struct ntp_pkt), 1);
+	unsigned char *rpkt = (unsigned char *)pkt;
 	struct tm tms;
 
 	if(pkt == NULL) exit((int)err_mem);
@@ -50,13 +55,14 @@ void sntp_sync(void)
 	
 	printf("pkt recvd:\n");
 	for(unsigned int i = 0; i < sizeof(struct ntp_pkt); i++) {
-		printf("%x ", (char)pkt[i]); // nonsense data
+		printf("%x ", rpkt[i]);
 	}
 
-	printf("\ntxtime: %lu\n", pkt->transmit_time_s); // this doesn't appear to be what is in the packet
+	printf("\nrxtime: %lu\n", SWAP_ENDIAN(pkt->receive_time_s));
+	printf("txtime: %lu\n", SWAP_ENDIAN(pkt->transmit_time_s));
 	printf("stratum: %u\n", pkt->stratum);
 
-	mini_gmtime_r(pkt->transmit_time_s, &tms);
+	mini_gmtime_r(SWAP_ENDIAN(pkt->transmit_time_s), &tms);
 	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
 
 
