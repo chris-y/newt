@@ -38,6 +38,8 @@ struct ntp_pkt {
 #define SWAP_ENDIAN(VAL) (((0xFF000000 & VAL) >> 24) | ((0x00FF0000 & VAL) >> 8) | \
 						((0x0000FF00 & VAL) << 8) | ((0x000000FF & VAL) << 24))
 
+#define NTP_TO_UNIX_EPOCH(E) (SWAP_ENDIAN(E)-2208988800L)
+
 void sntp_sync(void)
 {
 	struct ntp_pkt *pkt = calloc(sizeof(struct ntp_pkt), 1);
@@ -62,7 +64,7 @@ void sntp_sync(void)
 	printf("txtime: %lu\n", SWAP_ENDIAN(pkt->transmit_time_s));
 	printf("stratum: %u\n", pkt->stratum);
 
-	mini_gmtime_r(SWAP_ENDIAN(pkt->transmit_time_s), &tms);
+	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
 	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
 
 
