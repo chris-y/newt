@@ -44,7 +44,7 @@ static void print_usage(void)
 {
 	printf(".newt [-qv] <command> [args]\n\n");
 	printf("-q            quiet\n");
-        printf("-v            verbose\n);
+    printf("-v            verbose\n");
 	printf("\nCommands:\n");
 	printf("ip            show ip addr\n");
 	printf("info          show esp firmware\n");
