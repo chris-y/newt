@@ -76,7 +76,8 @@ void sntp_sync(void)
 	printf("ZX time: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER_NTP_F);
 
 	if(pkt->stratum == 0) { // Kiss-o'-Death
-		printf("Kiss-o'-Death: %s\n", SWAP_ENDIAN(pkt->reference_id));
+		unsigned char *kod = (unsigned char *)&pkt->reference_id;
+		printf("Kiss-o'-Death: %c%c%c%c\n", kod[0], kod[1], kod[3], kod[4]);
 		exit(0);
 	}
 
