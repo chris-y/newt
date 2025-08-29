@@ -8,6 +8,7 @@
 #include "c_gmtime.h"
 #include "error.h"
 #include "net.h"
+#include "timer.h"
 
 struct ntp_pkt {
 	uint8_t li_vn_mode;
@@ -40,6 +41,11 @@ struct ntp_pkt {
 
 #define NTP_TO_UNIX_EPOCH(E) (SWAP_ENDIAN(E)-2208988800L)
 
+#define ZX_TIMER_NTP_S SWAP_ENDIAN((uint32_t)(ZX_TIMER / 50))
+
+/* TODO: Convert to NTP fraction - this is in 1/50ths */
+#define ZX_TIMER_NTP_F (ZX_TIMER % 50)
+
 void sntp_sync(void)
 {
 	struct ntp_pkt *pkt = calloc(sizeof(struct ntp_pkt), 1);
@@ -50,6 +56,10 @@ void sntp_sync(void)
 	
 	SET_NTP_VN(pkt, 4); /* Version 4 */
 	SET_NTP_MODE(pkt, 3); /* Client */
+
+	pkt->originate_time_s = ZX_TIMER_NTP_S;
+	
+	printf("ZX timer: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER_NTP_F);
 
 	net_send_data(pkt, sizeof(struct ntp_pkt));
 	
@@ -63,6 +73,7 @@ void sntp_sync(void)
 	printf("\nrxtime: %lu\n", SWAP_ENDIAN(pkt->receive_time_s));
 	printf("txtime: %lu\n", SWAP_ENDIAN(pkt->transmit_time_s));
 	printf("stratum: %u\n", pkt->stratum);
+	printf("ZX time: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER_NTP_F);
 
 	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
 	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
