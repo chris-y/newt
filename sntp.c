@@ -57,7 +57,7 @@ void sntp_sync(void)
 	SET_NTP_VN(pkt, 4); /* Version 4 */
 	SET_NTP_MODE(pkt, 3); /* Client */
 
-	pkt->originate_time_s = ZX_TIMER_NTP_S;
+	pkt->transmit_time_s = ZX_TIMER_NTP_S;
 	
 	printf("ZX timer: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER_NTP_F);
 
@@ -74,6 +74,11 @@ void sntp_sync(void)
 	printf("txtime: %lu\n", SWAP_ENDIAN(pkt->transmit_time_s));
 	printf("stratum: %u\n", pkt->stratum);
 	printf("ZX time: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER_NTP_F);
+
+	if(pkt->stratum == 0) { // Kiss-o'-Death
+		printf("Kiss-o'-Death: %s\n", SWAP_ENDIAN(pkt->reference_id));
+		exit(0);
+	}
 
 	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
 	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
