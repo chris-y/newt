@@ -43,8 +43,12 @@ struct ntp_pkt {
 
 #define ZX_TIMER_NTP_S SWAP_ENDIAN((uint32_t)(ZX_TIMER / 50))
 
-/* TODO: Convert to NTP fraction - this is in 1/50ths */
-#define ZX_TIMER_NTP_F (ZX_TIMER % 50)
+/* Convert the current time to ZX timer */
+#define TIME_TO_ZX_TIMER(H,M,S) (((H*60*60)+(M*60)+(S))*50)
+
+/* Convert to NTP fraction - this is in 1/50ths */
+#define ZX_TIMER_NTP_F SWAP_ENDIAN((uint32_t)(((uint64_t)(ZX_TIMER % 50) << 32) / 50))
+#define NTP_F_TO_ZX_TIMER(F) (uint32_t)(((uint64_t)SWAP_ENDIAN(F) * 50) >> 32)
 
 void sntp_sync(void)
 {
@@ -58,8 +62,8 @@ void sntp_sync(void)
 	SET_NTP_MODE(pkt, 3); /* Client */
 
 	pkt->transmit_time_s = ZX_TIMER_NTP_S;
-	
-	printf("ZX timer: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER_NTP_F);
+	pkt->transmit_time_f = ZX_TIMER_NTP_F;
+	printf("ZX timer: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER % 50);
 
 	net_send_data(pkt, sizeof(struct ntp_pkt));
 	
@@ -84,6 +88,7 @@ void sntp_sync(void)
 	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
 	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
 
+	uint32_t zxtime = TIME_TO_ZX_TIMER(tms.tm_hour, tms.tm_min, tms.tm_sec) + NTP_F_TO_ZX_TIMER(pkt->transmit_time_f);
 
 	free(pkt);
 }
