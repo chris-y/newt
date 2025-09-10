@@ -24,6 +24,7 @@ static unsigned char old_uart;
 
 unsigned char err_break[] = "D BREAK - no repea" "\xf4";
 unsigned char err_mem[] = "4 Out of memor" "\xf9";
+unsigned char err_timeout[] = "Network timeou" "\xf4";
 
 bool quiet = false;
 bool verbose = false;

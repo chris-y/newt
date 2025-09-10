@@ -3,9 +3,15 @@
 #include <arch/zxn.h>
 
 #include <string.h>
+#include <stdlib.h>
 
+#include "error.h"
 #include "main.h"
+#include "timer.h"
 #include "uart.h"
+
+/* Timeout in seconds */
+#define ESP_TIMEOUT 5
 
 void uart_flush_read_buffer(void)
 {
@@ -39,8 +45,14 @@ void uart_tx_bin(unsigned char *s, unsigned int size)
 
 unsigned char uart_rx(void)
 {
-        while (!(IO_133B & 0x01))
+	uint32_t zxtime = ZX_TIMER;
+
+        while (!(IO_133B & 0x01)) {
                 user_break();
+		if((ZX_TIMER - zxtime) > (50 * ESP_TIMEOUT)) {
+			exit((int)err_timeout);
+		}
+	}
 
         return(IO_143B);
 }

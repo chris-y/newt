@@ -5,5 +5,6 @@
 
 extern unsigned char err_break[];
 extern unsigned char err_mem[];
+extern unsigned char err_timeout[];
 
 #endif
