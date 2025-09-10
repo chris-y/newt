@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "c_gmtime.h"
 #include "error.h"
@@ -42,6 +43,7 @@ struct ntp_pkt {
 #define NTP_TO_UNIX_EPOCH(E) (SWAP_ENDIAN(E)-2208988800L)
 
 #define ZX_TIMER_NTP_S SWAP_ENDIAN((uint32_t)(ZX_TIMER / 50))
+#define NANO_TO_ZX_TIMER(N) (uint32_t)((uint64_t)(N*50)/10^9)
 
 /* Convert the current time to ZX timer */
 #define TIME_TO_ZX_TIMER(H,M,S) (((H*60*60)+(M*60)+(S))*50)
@@ -49,6 +51,43 @@ struct ntp_pkt {
 /* Convert to NTP fraction - this is in 1/50ths */
 #define ZX_TIMER_NTP_F SWAP_ENDIAN((uint32_t)(((uint64_t)(ZX_TIMER % 50) << 32) / 50))
 #define NTP_F_TO_ZX_TIMER(F) (uint32_t)(((uint64_t)SWAP_ENDIAN(F) * 50) >> 32)
+
+#ifdef CALC_RT
+#define NTP_F_TO_NANO(F) (uint32_t)(((uint64_t)SWAP_ENDIAN(F) * 10^9 ) >> 32)
+
+struct timespec *sntp_rt_delay(struct ntp_pkt *pkt)
+{
+	struct timespec o_ts;
+	struct timespec r_ts;
+	struct timespec t_ts;
+	struct timespec d_ts;
+	struct timespec *ts = malloc(sizeof(struct timespec));
+
+	if(ts == NULL) exit((int)err_mem);
+
+	d_ts.tv_sec = (uint32_t)(ZX_TIMER / 50);
+	d_ts.tv_nsec = (uint32_t)(((ZX_TIMER % 50) * 10e9) / 50);
+
+	o_ts.tv_sec = NTP_TO_UNIX_EPOCH(pkt->originate_time_s);
+	o_ts.tv_nsec = NTP_F_TO_NANO(pkt->originate_time_f);
+
+	r_ts.tv_sec = NTP_TO_UNIX_EPOCH(pkt->receive_time_s);
+	r_ts.tv_nsec = NTP_F_TO_NANO(pkt->receive_time_f);
+
+	t_ts.tv_sec = NTP_TO_UNIX_EPOCH(pkt->transmit_time_s);
+	t_ts.tv_nsec = NTP_F_TO_NANO(pkt->transmit_time_f);
+
+	//((d - o) - (t - r)) / 2
+	timersub(&d_ts, &o_ts, &d_ts);
+	timersub(&t_ts, &r_ts, &t_ts);
+	timersub(&d_ts, &t_ts, ts);
+
+	ts->tv_sec /= 2;
+	ts->tv_nsec /= 2;
+	return ts;
+
+}
+#endif
 
 void sntp_sync(void)
 {
@@ -77,7 +116,7 @@ void sntp_sync(void)
 	printf("\nrxtime: %lu\n", SWAP_ENDIAN(pkt->receive_time_s));
 	printf("txtime: %lu\n", SWAP_ENDIAN(pkt->transmit_time_s));
 	printf("stratum: %u\n", pkt->stratum);
-	printf("ZX time: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER_NTP_F);
+	printf("ZX time: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER % 50);
 
 	if(pkt->stratum == 0) { // Kiss-o'-Death
 		unsigned char *kod = (unsigned char *)&pkt->reference_id;
@@ -89,6 +128,19 @@ void sntp_sync(void)
 	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
 
 	uint32_t zxtime = TIME_TO_ZX_TIMER(tms.tm_hour, tms.tm_min, tms.tm_sec) + NTP_F_TO_ZX_TIMER(pkt->transmit_time_f);
+
+	printf("zx: %u\n", zxtime);
+
+#ifdef CALC_RT
+	struct timespec *ts = sntp_rt_delay(pkt);
+
+	zxtime += ts->tv_sec * 50;
+	zxtime += NANO_TO_ZX_TIMER(ts->tv_nsec);
+
+	printf("rt: %u.%u\n", ts->tv_sec, ts->tv_nsec);
+#endif
+
+	zx_timer_set(zxtime);
 
 	free(pkt);
 }

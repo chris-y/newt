@@ -4,4 +4,15 @@
 #include <z80.h>
 
 #define ZX_TIMER ((z80_bpeek(23674)*65536) + (z80_bpeek(23673)*256) + z80_bpeek(23672))
+
+static inline void zx_timer_set(uint32_t t)
+{
+        uint32_t t2 = (t % 65536);
+        uint32_t t3 = (t2 % 256);
+
+        z80_bpoke(23674, t / 65536);
+        z80_bpoke(23673, t2 / 256);
+        z80_bpoke(23672, t3);
+}
+
 #endif
