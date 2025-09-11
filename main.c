@@ -190,8 +190,13 @@ int main(int argc, char **argv)
 				print_cmd(at_gmr);
 			}
 			
-			if(stricmp(argv[command_at], "sntp") == 0) sntp_test();
-			
+			if(stricmp(argv[command_at], "sntp") == 0) {
+				if(argc >= (command_at + 2)) {
+					sntp_get(argv[command_at + 1]);
+				} else {
+					sntp_get(NULL);
+				}
+			}
 		}
 
 		if(argc >= (command_at + 2)) {
@@ -210,6 +215,7 @@ int main(int argc, char **argv)
 					exit((int)err_mem);
 				}
 			}
+			if(stricmp(argv[command_at], "sntp") == 0) sntp_get(argv[command_at + 1]);
 		}
 	}
 

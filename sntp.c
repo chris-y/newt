@@ -102,12 +102,15 @@ void sntp_sync(void)
 
 	pkt->transmit_time_s = ZX_TIMER_NTP_S;
 	pkt->transmit_time_f = ZX_TIMER_NTP_F;
+#ifdef DEBUG
 	printf("ZX timer: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER % 50);
+#endif
 
 	net_send_data(pkt, sizeof(struct ntp_pkt));
 	
 	net_recv_data(pkt, sizeof(struct ntp_pkt));
 	
+#ifdef DEBUG
 	printf("pkt recvd:\n");
 	for(unsigned int i = 0; i < sizeof(struct ntp_pkt); i++) {
 		printf("%x ", rpkt[i]);
@@ -117,6 +120,7 @@ void sntp_sync(void)
 	printf("txtime: %lu\n", SWAP_ENDIAN(pkt->transmit_time_s));
 	printf("stratum: %u\n", pkt->stratum);
 	printf("ZX time: %u.%lu\n", ZX_TIMER / 50, ZX_TIMER % 50);
+#endif
 
 	if(pkt->stratum == 0) { // Kiss-o'-Death
 		unsigned char *kod = (unsigned char *)&pkt->reference_id;
@@ -125,11 +129,13 @@ void sntp_sync(void)
 	}
 
 	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
-	printf("%04u-%02u-%02u %02u:%02u:%02u\n", 1900+tms.tm_year, 1+ tms.tm_mon, tms.tm_mday, tms.tm_hour, tms.tm_min, tms.tm_sec);
+	printf("%02u/%02u/%04u %02u:%02u:%02u\n", tms.tm_mday, 1+ tms.tm_mon, 1900+tms.tm_year, tms.tm_hour, tms.tm_min, tms.tm_sec);
 
 	uint32_t zxtime = TIME_TO_ZX_TIMER(tms.tm_hour, tms.tm_min, tms.tm_sec) + NTP_F_TO_ZX_TIMER(pkt->transmit_time_f);
 
+#ifdef DEBUG
 	printf("zx: %u\n", zxtime);
+#endif
 
 #ifdef CALC_RT
 	struct timespec *ts = sntp_rt_delay(pkt);
@@ -145,19 +151,23 @@ void sntp_sync(void)
 	free(pkt);
 }
 
-void sntp_test(void)
+void sntp_get(unsigned char *server)
 {
 	char ip[32];
 	unsigned int conn = 0;
+	unsigned char *srv = server;
+	if(srv == NULL) srv = "pool.ntp.org\0";
 	
 	/* ensure no open connections */
 	net_close();
 	
-	if(net_lookup("uk.pool.ntp.org", ip, 32)) {
+	if(net_lookup(srv, ip, 32)) {
 		if(net_connect_udp(ip, 123)) {
 				sntp_sync();
 			net_close();
 		}
 	}
+	
+	exit(0);
 }
 
