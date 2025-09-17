@@ -46,7 +46,7 @@ struct ntp_pkt {
 #define NANO_TO_ZX_TIMER(N) (uint32_t)((uint64_t)(N*50)/10^9)
 
 /* Convert the current time to ZX timer */
-#define TIME_TO_ZX_TIMER(H,M,S) (((H*60*60)+(M*60)+(S))*50)
+#define TIME_TO_ZX_TIMER(H,M,S) (((H*3600)+(M*60)+(S))*50)
 
 /* Convert to NTP fraction - this is in 1/50ths */
 #define ZX_TIMER_NTP_F SWAP_ENDIAN((uint32_t)(((uint64_t)(ZX_TIMER % 50) << 32) / 50))
@@ -131,6 +131,7 @@ void sntp_sync(void)
 	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
 	printf("%02u/%02u/%04u %02u:%02u:%02u\n", tms.tm_mday, 1+ tms.tm_mon, 1900+tms.tm_year, tms.tm_hour, tms.tm_min, tms.tm_sec);
 
+#ifdef SET_ZXTIMER
 	uint32_t zxtime = TIME_TO_ZX_TIMER(tms.tm_hour, tms.tm_min, tms.tm_sec) + NTP_F_TO_ZX_TIMER(pkt->transmit_time_f);
 
 #ifdef DEBUG
@@ -147,6 +148,7 @@ void sntp_sync(void)
 #endif
 
 	zx_timer_set(zxtime);
+#endif
 
 	free(pkt);
 }
