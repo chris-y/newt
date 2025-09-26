@@ -16,3 +16,5 @@ ip            show ip addr
 info          show esp firmware
 
 lookup <fqdn> lookup ip for fqdn
+
+sntp [server] get time from server

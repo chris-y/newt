@@ -51,6 +51,7 @@ static void print_usage(void)
 	printf("ip            show ip addr\n");
 	printf("info          show esp firmware\n");
 	printf("lookup <fqdn> lookup ip for fqdn\n");
+	printf("sntp [server] get time from server\n");
 	exit(0);
 }
 
