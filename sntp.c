@@ -9,6 +9,7 @@
 #include "c_gmtime.h"
 #include "error.h"
 #include "net.h"
+#include "rtc.h"
 #include "timer.h"
 
 struct ntp_pkt {
@@ -59,9 +60,16 @@ void sntp_sync(void)
 	SET_NTP_VN(pkt, 4); /* Version 4 */
 	SET_NTP_MODE(pkt, 3); /* Client */
 
-	pkt->transmit_time_s = ZX_TIMER_NTP_S;
-	pkt->transmit_time_f = ZX_TIMER_NTP_F;
-
+	time_t rtc = rtc_get_time();
+	
+	if(rtc == 0) {
+		pkt->transmit_time_s = ZX_TIMER_NTP_S;
+		pkt->transmit_time_f = ZX_TIMER_NTP_F;
+	} else {
+		pkt->transmit_time_s = SWAP_ENDIAN(rtc);
+		pkt->transmit_time_f = 0; /* TODO: RTC fractions */	
+	}
+	
 	net_send_data(pkt, sizeof(struct ntp_pkt));
 	
 	net_recv_data(pkt, sizeof(struct ntp_pkt));
