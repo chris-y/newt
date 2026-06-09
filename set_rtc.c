@@ -2,13 +2,14 @@
  * set_rtc.c – Set the ZX Spectrum Next DS1307 (time, date & signature)
  *             Callable function for your own dot command.
  *
+ * No external I/O headers required – all port access is inline asm.
+ *
  * Usage:
  *   #include "set_rtc.h"
  *   set_rtc(2026, 6, 8, 14, 30, 0);
  */
 
 #include <stdint.h>
-#include <stdlib.h>    /* if you need NULL, otherwise omit */
 
 /* ZX Next I²C bus 0 – the DS1307 */
 #define SCL_PORT  0x103B
@@ -16,16 +17,28 @@
 #define DS1307_ADDR_W  0xD0
 
 /* ------------------------------------------------------------------ */
-/* Low‑level I²C helpers (identical to the original ASM approach) */
+/* Low‑level I²C helpers (direct port writes, matching the ASM) */
 
 static void i2c_delay(void) {
     __asm__("nop\nnop\nnop\n");
 }
 
-static void scl_high(void) { outp(SCL_PORT, 1); i2c_delay(); }
-static void scl_low(void)  { outp(SCL_PORT, 0); i2c_delay(); }
-static void sda_high(void) { outp(SDA_PORT, 1); i2c_delay(); }
-static void sda_low(void)  { outp(SDA_PORT, 0); i2c_delay(); }
+static void scl_high(void) {
+    __asm__("ld bc, 0x103B\nld a, 1\nout (c), a");
+    i2c_delay();
+}
+static void scl_low(void) {
+    __asm__("ld bc, 0x103B\nxor a\nout (c), a");
+    i2c_delay();
+}
+static void sda_high(void) {
+    __asm__("ld bc, 0x113B\nld a, 1\nout (c), a");
+    i2c_delay();
+}
+static void sda_low(void) {
+    __asm__("ld bc, 0x113B\nxor a\nout (c), a");
+    i2c_delay();
+}
 
 static void i2c_start(void) {
     sda_high();
@@ -46,11 +59,10 @@ static void i2c_stop(void) {
 
 /* Write one byte – no ACK check (same as the ASM) */
 static void i2c_write(uint8_t data) {
-    for (int i = 7; i >= 0; --i) {
-        if (data & (1 << i))
-            sda_high();
-        else
-            sda_low();
+    uint8_t i;
+    for (i = 0x80; i; i >>= 1) {
+        if (data & i) sda_high();
+        else          sda_low();
         scl_high();
         i2c_delay();
         scl_low();
@@ -89,8 +101,6 @@ static int day_of_week(int y, int m, int d) {
  *   hour  – 0 to 23
  *   min   – 0 to 59
  *   sec   – 0 to 59
- *
- * No return value (always succeeds – the ASM also ignores ACK errors).
  */
 void set_rtc(int year, int month, int day,
              int hour, int min, int sec)
