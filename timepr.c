@@ -1,6 +1,7 @@
 /* newt by Chris Youbg 2026 */
 
 /* time.c */
+#include <stdio.h>
 #include <sys/time.h>
 
 #include "c_gmtime.h"
