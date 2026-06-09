@@ -3,6 +3,8 @@ main.c
 mktime.c
 net.c
 rtc.c
+set_rtc.c
 sntp.c
+time.c
 uart.c
 

@@ -6,10 +6,10 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "c_gmtime.h"
 #include "error.h"
 #include "net.h"
 #include "rtc.h"
+#include "timepr.h"
 #include "timer.h"
 
 struct ntp_pkt {
@@ -53,7 +53,6 @@ void sntp_sync(void)
 {
 	struct ntp_pkt *pkt = calloc(sizeof(struct ntp_pkt), 1);
 	unsigned char *rpkt = (unsigned char *)pkt;
-	struct tm tms;
 
 	if(pkt == NULL) exit((int)err_mem);
 	
@@ -80,8 +79,7 @@ void sntp_sync(void)
 		exit(0);
 	}
 
-	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
-	printf("%02u/%02u/%04u %02u:%02u:%02u\n", tms.tm_mday, 1+tms.tm_mon, 1900+tms.tm_year, tms.tm_hour, tms.tm_min, tms.tm_sec);
+	time_print((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s));
 
 	free(pkt);
 }

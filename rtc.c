@@ -9,6 +9,7 @@
 
 #include "mktime.h"
 #include "rtc.h"
+#include "timepr.h"
 
 static struct esx_drvapi rtc;
 static struct dos_tm nrtc;
@@ -39,4 +40,9 @@ time_t rtc_get_time(void)
    //printf("%04u-%02u-%02u %02u:%02u:%02u", 1900+tm.tm_year, 1+ tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
    return(mktime(&rtc_tm));
+}
+
+void rtc_print(void)
+{
+   time_print((int32_t)rtc_get_time());
 }
