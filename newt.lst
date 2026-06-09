@@ -5,6 +5,6 @@ net.c
 rtc.c
 set_rtc.c
 sntp.c
-time.c
+timepr.c
 uart.c
 
