@@ -5,4 +5,5 @@
 #include <sys/time.h>
 
 time_t rtc_get_time(void);
+void rtc_print(void);
 #endif
