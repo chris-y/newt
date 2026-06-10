@@ -3,5 +3,5 @@
 #ifndef __NEWT_SNTP_H
 #define __NEWT_SNTP_H 1
 
-void sntp_get(unsigned char *server);
+void sntp_get(unsigned char *server, bool rtc);
 #endif

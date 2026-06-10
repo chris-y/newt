@@ -3,11 +3,13 @@ ZX Spectrum Next network tool
 
 Copy to dot and run as follows:
 
-.newt [-qv] <command> [args]
+.newt [-qvw] <command> [args]
 
 -q            quiet
 
 -v            verbose
+
+-w            write rtc
 
 Commands:
 
@@ -17,7 +19,7 @@ info          show esp firmware
 
 lookup <fqdn> lookup ip for fqdn
 
-rtc [set]     get time from RTC
-              or set with `rtc set "dd/mm/yy" "hh:mm:ss"`
+rtc [<date> <time>]     get time from RTC
+              or set with `-w rtc "dd/mm/yy" "hh:mm:ss"`
 
-sntp [server] get time from server
+sntp [server] get time from server (use -w to set rtc)
