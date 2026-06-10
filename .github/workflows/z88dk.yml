@@ -1,8 +1,8 @@
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
  
 jobs:
   build_job:
@@ -18,5 +18,5 @@ jobs:
           make -f Makefile
       - uses: actions/upload-artifact@v4
         with:
-          name: NETW
-          path: ./NETW
+          name: NEWT
+          path: ./NEWT
