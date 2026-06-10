@@ -9,7 +9,7 @@
 
 #include "mktime.h"
 #include "rtc.h"
-#include "timepr.h"
+#include "set_rtc.h"
 
 static struct esx_drvapi rtc;
 static struct dos_tm nrtc;
@@ -42,7 +42,7 @@ time_t rtc_get_time(void)
    return(mktime(&rtc_tm));
 }
 
-void rtc_print(void)
+void rtc_set_time(struct tm *tms)
 {
-   time_print((int32_t)rtc_get_time());
+   set_rtc(1900+tms->tm_year, 1+tms->tm_mon, tms->tm_mday, tms->tm_hour, tms->tm_min, tms->tm_sec);
 }

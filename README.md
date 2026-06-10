@@ -17,4 +17,7 @@ info          show esp firmware
 
 lookup <fqdn> lookup ip for fqdn
 
+rtc [set]     get time from RTC
+              or set with `rtc set "dd/mm/yy" "hh:mm:ss"`
+
 sntp [server] get time from server

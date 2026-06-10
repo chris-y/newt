@@ -1,5 +1,5 @@
 /* newt
- * Chris Young 2025
+ * Chris Young 2025-2026
  */
 
 #pragma output CLIB_MALLOC_HEAP_SIZE = -1
@@ -9,12 +9,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <arch/zxn.h>
 
+#include "date.h"
 #include "error.h"
 #include "main.h"
 #include "net.h"
+#include "rtc.h"
 #include "sntp.h"
+#include "timepr.h"
 #include "uart.h" // for IO_153B
 
 #define RTM_28MHZ 3 // from manual
@@ -51,7 +55,8 @@ static void print_usage(void)
 	printf("ip            show ip addr\n");
 	printf("info          show esp firmware\n");
 	printf("lookup <fqdn> lookup ip for fqdn\n");
-	printf("sntp [server] get time from server\n");
+	printf("sntp [srv]    get time from srv\n");
+	printf("rtc [set]     get or set rtc\n");
 	exit(0);
 }
 
@@ -162,6 +167,20 @@ static void print_cmd(unsigned char cmd[])
 	exit(0);
 }
 
+static void print_rtc(void)
+{
+   time_print((int32_t)rtc_get_time());
+   
+   exit(0);
+}
+
+static void print_rtc_help(void)
+{
+	printf("Usage: .newt rtc set\n             \"dd/mm/yy\" \"hh:mm:ss\"");
+	
+	exit(0);
+}
+
 int main(int argc, char **argv)
 {
 	unsigned int command_at = 1;
@@ -188,7 +207,7 @@ int main(int argc, char **argv)
 				command_at = 2;
 			}
 
-		if(!quiet) printf("newt %s by Chris Young 2025\nhttps://github.com/chris-y/newt\n\n", NEWT_VER);
+		if(!quiet) printf("newt %s by Chris Young 2025-6\nhttps://github.com/chris-y/newt\n\n", NEWT_VER);
 
 		if(argc >= (command_at + 1)) {
 			if(stricmp(argv[command_at], "ip") == 0) print_ip();
@@ -205,6 +224,29 @@ int main(int argc, char **argv)
 					sntp_get(NULL);
 				}
 			}
+			
+			if(stricmp(argv[command_at], "rtc") == 0) {
+				if((argc >= (command_at + 2)) && (stricmp(argv[command_at + 1], "set") == 0)) {
+					if(argc == (command_at + 4)) {
+						struct tm tms;
+						datetime_to_tm(argv[command_at + 2], argv[command_at + 3], &tms);
+						if(!quiet) {
+							printf("Set RTC to: ");
+							time_print_tm(&tms);
+						}
+						rtc_set_time(&tms);
+						if(!quiet) printf("Reading back RTC...\n");
+						print_rtc();
+						exit(0);
+					} else {
+						print_rtc_help();
+					}
+				} else {
+					print_rtc();
+				}
+			}
+			
+			
 		}
 
 		if(argc >= (command_at + 2)) {
