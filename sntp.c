@@ -6,6 +6,7 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "c_gmtime.h"
 #include "error.h"
 #include "net.h"
 #include "rtc.h"
@@ -49,7 +50,7 @@ struct ntp_pkt {
 /* Convert to NTP fraction - this is in 1/50ths */
 #define ZX_TIMER_NTP_F SWAP_ENDIAN((uint32_t)(((uint64_t)(ZX_TIMER % 50) << 32) / 50))
 
-void sntp_sync(void)
+static void sntp_sync(bool w)
 {
 	struct ntp_pkt *pkt = calloc(sizeof(struct ntp_pkt), 1);
 	unsigned char *rpkt = (unsigned char *)pkt;
@@ -79,12 +80,20 @@ void sntp_sync(void)
 		exit(0);
 	}
 
-	time_print((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s));
+	struct tm tms;
+
+	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
+	
+	if(w) { /* write rtc */
+		rtc_set_time(&tms);
+	}
+	
+	time_print_tm(&tms);
 
 	free(pkt);
 }
 
-void sntp_get(unsigned char *server)
+void sntp_get(unsigned char *server, bool rtc)
 {
 	char ip[32];
 	unsigned int conn = 0;
@@ -96,7 +105,7 @@ void sntp_get(unsigned char *server)
 	
 	if(net_lookup(srv, ip, 32)) {
 		if(net_connect_udp(ip, 123)) {
-				sntp_sync();
+				sntp_sync(rtc);
 			net_close();
 		}
 	}

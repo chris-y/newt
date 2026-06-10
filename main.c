@@ -33,6 +33,7 @@ unsigned char err_timeout[] = "Network timeou" "\xf4";
 
 bool quiet = false;
 bool verbose = false;
+bool rtc = false; /* write to RTC */
 
 void user_break(void)
 {
@@ -48,15 +49,16 @@ static void cleanup(void)
 
 static void print_usage(void)
 {
-	printf(".newt [-qv] <command> [args]\n\n");
+	printf(".newt [-qvw] <command> [args]\n\n");
 	printf("-q            quiet\n");
     printf("-v            verbose\n");
+    printf("-w            write rtc\n");
 	printf("\nCommands:\n");
 	printf("ip            show ip addr\n");
 	printf("info          show esp firmware\n");
 	printf("lookup <fqdn> lookup ip for fqdn\n");
 	printf("sntp [srv]    get time from srv\n");
-	printf("rtc [set]     get or set rtc\n");
+	printf("rtc [<d> <t>] get or set rtc\n");
 	exit(0);
 }
 
@@ -176,7 +178,7 @@ static void print_rtc(void)
 
 static void print_rtc_help(void)
 {
-	printf("Usage: .newt rtc set\n             \"dd/mm/yy\" \"hh:mm:ss\"");
+	printf("Usage: .newt -w rtc \"dd/mm/yy\" \"hh:mm:ss\"");
 	
 	exit(0);
 }
@@ -204,6 +206,9 @@ int main(int argc, char **argv)
 						quiet = false; /* can't be quiet and verbose simultaneously */
 						verbose = true;
 				}
+				if((argv[1][1] == 'w') || ((argv[1][1] != '\0') && ((argv[1][2] == 'w')))) {
+					rtc = true;
+				}
 				command_at = 2;
 			}
 
@@ -219,17 +224,17 @@ int main(int argc, char **argv)
 			
 			if(stricmp(argv[command_at], "sntp") == 0) {
 				if(argc >= (command_at + 2)) {
-					sntp_get(argv[command_at + 1]);
+					sntp_get(argv[command_at + 1], rtc);
 				} else {
-					sntp_get(NULL);
+					sntp_get(NULL, rtc);
 				}
 			}
 			
 			if(stricmp(argv[command_at], "rtc") == 0) {
-				if((argc >= (command_at + 2)) && (stricmp(argv[command_at + 1], "set") == 0)) {
-					if(argc == (command_at + 4)) {
+				if(rtc) {
+					if((argc >= (command_at + 2))) {
 						struct tm tms;
-						datetime_to_tm(argv[command_at + 2], argv[command_at + 3], &tms);
+						datetime_to_tm(argv[command_at + 1], argv[command_at + 2], &tms);
 						if(!quiet) {
 							printf("Set RTC to: ");
 							time_print_tm(&tms);
@@ -245,8 +250,6 @@ int main(int argc, char **argv)
 					print_rtc();
 				}
 			}
-			
-			
 		}
 
 		if(argc >= (command_at + 2)) {
@@ -265,7 +268,6 @@ int main(int argc, char **argv)
 					exit((int)err_mem);
 				}
 			}
-			if(stricmp(argv[command_at], "sntp") == 0) sntp_get(argv[command_at + 1]);
 		}
 	}
 
