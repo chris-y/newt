@@ -1,4 +1,4 @@
-/* sntp.c - Chris Young 2025 */
+/* sntp.c - Chris Young 2025-2026 */
 
 #include <stdint.h>
 #include <stdio.h>
@@ -75,7 +75,7 @@ void sntp_sync(void)
 	
 	if(pkt->stratum == 0) { // Kiss-o'-Death
 		unsigned char *kod = (unsigned char *)&pkt->reference_id;
-		printf("Kiss-o'-Death: %c%c%c%c\n", kod[0], kod[1], kod[3], kod[4]);
+		printf("Kiss-o'-Death: %c%c%c%c\n", kod[0], kod[1], kod[2], kod[3]);
 		exit(0);
 	}
 
