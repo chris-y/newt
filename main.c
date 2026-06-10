@@ -22,7 +22,7 @@
 #include "uart.h" // for IO_153B
 
 #define RTM_28MHZ 3 // from manual
-#define NEWT_VER "0.1"
+#define NEWT_VER "0.2"
 
 static unsigned char old_cpu_speed;
 static unsigned char old_uart;
@@ -33,7 +33,6 @@ unsigned char err_timeout[] = "Network timeou" "\xf4";
 
 bool quiet = false;
 bool verbose = false;
-bool rtc = false; /* write to RTC */
 
 void user_break(void)
 {
@@ -178,7 +177,7 @@ static void print_rtc(void)
 
 static void print_rtc_help(void)
 {
-	printf("Usage: .newt -w rtc \"dd/mm/yy\" \"hh:mm:ss\"");
+	printf("Usage: .newt -w rtc\n       \"dd/mm/yy\" \"hh:mm:ss\"");
 	
 	exit(0);
 }
@@ -189,6 +188,8 @@ int main(int argc, char **argv)
 
 	unsigned char at_gmr[] = "AT+GMR\r\n\0";
 	unsigned char ate0[] = "ATE0\r\n\0";
+
+	bool rtc = false; /* write to RTC */
 
 	old_cpu_speed = ZXN_READ_REG(REG_TURBO_MODE);
 	old_uart = IO_153B & 0x40;
