@@ -5,4 +5,5 @@
 #include <sys/time.h>
 
 void time_print(time_t s);
+void time_print_tm(struct tm *tms);
 #endif
