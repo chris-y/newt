@@ -1,25 +1,34 @@
 # newt
-ZX Spectrum Next network tool
 
-Copy to dot and run as follows:
+*ZX Spectrum Next network tool*
 
-.newt [-qvw] <command> [args]
+> Ensure the binary is copied to your `PATH` (e.g., as `.newt`).
 
--q            quiet
+---
 
--v            verbose
+## Synopsis
 
--w            write rtc
+    .newt [-qvw] <command> [args]
 
-Commands:
+---
 
-ip            show ip addr
+## Options
 
-info          show esp firmware
+| Option | Description |
+| :----- | :---------- |
+| `-q`   | Quiet mode – suppress unnecessary output. |
+| `-v`   | Verbose mode – display detailed diagnostic information. |
+| `-w`   | Write the retrieved time to the RTC (used in combination with the `sntp` command). |
 
-lookup <fqdn> lookup ip for fqdn
+---
 
-rtc [<date> <time>]     get time from RTC
-              or set with `-w rtc "dd/mm/yy" "hh:mm:ss"`
+## Commands
 
-sntp [server] get time from server (use -w to set rtc)
+| Command                                 | Description |
+| :-------------------------------------- | :---------- |
+| `ip`                                    | Show the current IP address. |
+| `info`                                  | Display the ESP firmware version. |
+| `lookup <fqdn>`                         | Perform a DNS lookup for the specified fully qualified domain name. |
+| `rtc`                                   | Display the current date and time from the RTC. |
+| `rtc "dd/mm/yy" "hh:mm:ss"`             | Manually set the RTC to the given date and time. |
+| `sntp [server]`                         | Fetch the current time from an SNTP server (uses a default if no server is provided). Add the `-w` flag to automatically write the fetched time to the RTC (e.g., `.newt -w sntp pool.ntp.org`). |
