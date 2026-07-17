@@ -2,7 +2,7 @@
 
 *ZX Spectrum Next network tool*
 
-> Ensure the binary is copied to your `PATH` (e.g., as `.newt`).
+Ensure the binary is copied to your `C:dot` directory as `newt`.
 
 ---
 
