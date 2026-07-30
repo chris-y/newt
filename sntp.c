@@ -103,11 +103,9 @@ void sntp_get(unsigned char *server, bool rtc)
 	/* ensure no open connections */
 	net_close();
 	
-	if(net_lookup(srv, ip, 32)) {
-		if(net_connect_udp(ip, 123)) {
-				sntp_sync(rtc);
-			net_close();
-		}
+	if(net_connect_udp(srv, 123)) {
+			sntp_sync(rtc);
+		net_close();
 	}
 	
 	exit(0);
