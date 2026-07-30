@@ -49,15 +49,15 @@ static void cleanup(void)
 static void print_usage(void)
 {
 	printf(".newt [-qvw] <command> [args]\n\n");
-	printf("-q            quiet\n");
-    printf("-v            verbose\n");
-    printf("-w            write rtc\n");
+	printf("-q             quiet\n");
+    printf("-v             verbose\n");
+    printf("-w             write rtc\n");
 	printf("\nCommands:\n");
-	printf("ip            show ip addr\n");
-	printf("info          show esp firmware\n");
-	printf("lookup <fqdn> lookup ip for fqdn\n");
-	printf("sntp [srv]    get time from srv\n");
-	printf("rtc [<d> <t>] get or set rtc\n");
+	printf("ip             show ip addr\n");
+	printf("info           show esp firmware\n");
+	printf("lookup <fqdn>  lookup ip for fqdn\n");
+	printf("sntp <o> [srv] get time from srv\n");
+	printf("rtc [<d> <t>]  get or set rtc\n");
 	exit(0);
 }
 
@@ -182,6 +182,16 @@ static void print_rtc_help(void)
 	exit(0);
 }
 
+static void print_sntp_help(void)
+{
+	printf("Usage: .newt [-w] sntp <o> [srv]\n");
+	printf("       [-w]  write RTC\n");
+	printf("       <o>   offset in mins\n");
+	printf("       [srv] server address\n");
+	
+	exit(0);
+}
+
 int main(int argc, char **argv)
 {
 	unsigned int command_at = 1;
@@ -224,10 +234,12 @@ int main(int argc, char **argv)
 			}
 			
 			if(stricmp(argv[command_at], "sntp") == 0) {
-				if(argc >= (command_at + 2)) {
-					sntp_get(argv[command_at + 1], rtc);
+				if(argc >= (command_at + 3)) {
+					sntp_get(argv[command_at + 2], rtc, atol(argv[command_at + 1]));
+				} else if(argc >= (command_at + 2)) {
+					sntp_get(NULL, rtc, atol(argv[command_at + 1]));
 				} else {
-					sntp_get(NULL, rtc);
+					print_sntp_help();
 				}
 			}
 			

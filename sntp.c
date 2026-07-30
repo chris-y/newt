@@ -50,10 +50,11 @@ struct ntp_pkt {
 /* Convert to NTP fraction - this is in 1/50ths */
 #define ZX_TIMER_NTP_F SWAP_ENDIAN((uint32_t)(((uint64_t)(ZX_TIMER % 50) << 32) / 50))
 
-static void sntp_sync(bool w)
+static void sntp_sync(bool w, int32_t offset)
 {
 	struct ntp_pkt *pkt = calloc(sizeof(struct ntp_pkt), 1);
 	unsigned char *rpkt = (unsigned char *)pkt;
+	uint32_t o = offset * 60;
 
 	if(pkt == NULL) exit((int)err_mem);
 	
@@ -82,7 +83,7 @@ static void sntp_sync(bool w)
 
 	struct tm tms;
 
-	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s), &tms);
+	mini_gmtime_r((int32_t)NTP_TO_UNIX_EPOCH(pkt->transmit_time_s) + o, &tms);
 	
 	if(w) { /* write rtc */
 		rtc_set_time(&tms);
@@ -93,7 +94,7 @@ static void sntp_sync(bool w)
 	free(pkt);
 }
 
-void sntp_get(unsigned char *server, bool rtc)
+void sntp_get(unsigned char *server, bool rtc, int32_t offset)
 {
 	char ip[32];
 	unsigned int conn = 0;
@@ -104,7 +105,7 @@ void sntp_get(unsigned char *server, bool rtc)
 	net_close();
 	
 	if(net_connect_udp(srv, 123)) {
-			sntp_sync(rtc);
+			sntp_sync(rtc, offset);
 		net_close();
 	}
 	
