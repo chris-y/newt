@@ -30,14 +30,15 @@ bool http_get(unsigned char *req, unsigned char *buf, unsigned int buf_size)
 		snprintf(cmd, 100, "GET / HTTP/1.1\r\nHost: %s\r\n\r\n", req);
 	}
 	
-	printf("%s, %s, %s\n", req, path, cmd);
+	//printf("%s, %s, %s\n", req, path, cmd);
 
 	/* ensure no open connections */
 	net_close();
 	
 	if(net_connect_tcp(req, 80)) {
 		net_send_data(cmd, strlen(cmd));
-		net_recv_data(buf, buf_size);
+		unsigned int len = net_recv_data(buf, buf_size);
+		if(len < buf_size) buf[len] = '\0'; /* NULL-terminate string where possible */
 		net_close();
 	} else {
 		return false;
