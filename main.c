@@ -14,6 +14,7 @@
 
 #include "date.h"
 #include "error.h"
+#include "http.h"
 #include "main.h"
 #include "net.h"
 #include "rtc.h"
@@ -276,6 +277,20 @@ int main(int argc, char **argv)
 						printf("Error resolving\n");
 					}
 					free(ip);
+					exit(0);
+				} else {
+					exit((int)err_mem);
+				}
+			} else if(stricmp(argv[command_at], "http") == 0) {
+				unsigned char *buf = malloc(1024);
+				if(buf) {
+					if(!quiet) printf("HTTP req \"%s\":\n", argv[command_at + 1]);
+					if(http_get(argv[command_at + 1], buf, 1024)) {
+						puts(buf);
+					} else {
+						printf("Error\n");
+					}
+					free(buf);
 					exit(0);
 				} else {
 					exit((int)err_mem);
