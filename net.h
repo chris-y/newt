@@ -22,6 +22,10 @@ bool net_lookup(unsigned char *hostname, unsigned char *ip, unsigned int ip_size
  * returns false on error */
 bool net_connect_udp(unsigned char *ip, unsigned int port);
 
+/* open a tcp connection to ip:port
+ * returns false on error */
+bool net_connect_tcp(unsigned char *ip, unsigned int port);
+
 /* close the current connection */
 void net_close(void);
 

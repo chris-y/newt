@@ -137,14 +137,20 @@ bool net_lookup(unsigned char *hostname, unsigned char *ip, unsigned int ip_size
 	}
 }
 
-bool net_connect_udp(unsigned char *ip, unsigned int port)
+static bool net_connect(unsigned char *ip, unsigned int port, bool tcp)
 {
 	unsigned char buf[64];
 	unsigned int bytes_read;
+	char conn_type[4] = "UDP\0";
 	
 	if(!quiet) printf("Connect to %s:%u...\n", ip, port);
 	
-	snprintf(buf, 64, "AT+CIPSTART=\"UDP\",\"%s\",%u\r\n", ip, port);
+	if(tcp) {
+		conn_type[0] = 'T';
+		conn_type[1] = 'C';
+	}
+	
+	snprintf(buf, 64, "AT+CIPSTART=\"%s\",\"%s\",%u\r\n", conn_type, ip, port);
 	
 	net_send(buf);
 	bytes_read = net_recv_line(buf, 64);
@@ -157,6 +163,16 @@ bool net_connect_udp(unsigned char *ip, unsigned int port)
 	}
 	
 	return(false);
+}
+
+bool net_connect_udp(unsigned char *ip, unsigned int port)
+{
+	return net_connect(ip, port, false);
+}
+
+bool net_connect_tcp(unsigned char *ip, unsigned int port)
+{
+	return net_connect(ip, port, true);
 }
 
 void net_close(void)
