@@ -8,6 +8,11 @@
 #include "error.h"
 #include "net.h"
 
+char *http_strip_header(unsigned char *buf)
+{
+	return strstr(buf, "\r\n\r\n");
+}
+
 bool http_get(unsigned char *req, unsigned char *buf, unsigned int buf_size)
 {
 	char cmd[101];
