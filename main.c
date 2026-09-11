@@ -286,7 +286,11 @@ int main(int argc, char **argv)
 				if(buf) {
 					if(!quiet) printf("HTTP req \"%s\":\n", argv[command_at + 1]);
 					if(http_get(argv[command_at + 1], buf, 1024)) {
-						puts(http_strip_header(buf));
+						if(verbose) {
+								puts(buf);
+							} else {
+								puts(http_strip_header(buf));
+							}
 					} else {
 						printf("Error\n");
 					}
