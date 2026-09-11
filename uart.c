@@ -40,7 +40,7 @@ void uart_tx_bin(unsigned char *s, unsigned int size)
                 while (IO_133B & 0x02)
                         user_break();
                 IO_133B = *s++;
-        } while (size--);
+        } while (--size);
 }
 
 unsigned char uart_rx(void)
