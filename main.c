@@ -57,6 +57,7 @@ static void print_usage(void)
 	printf("ip             show ip addr\n");
 	printf("info           show esp firmware\n");
 	printf("lookup <fqdn>  lookup ip for fqdn\n");
+	printf("http <srv>[/p] http get request\n");
 	printf("sntp <o> [srv] get time from srv\n");
 	printf("rtc [<d> <t>]  get or set rtc\n");
 	exit(0);
