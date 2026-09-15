@@ -58,7 +58,7 @@ static void print_usage(void)
 	printf("info           show esp firmware\n");
 	printf("lookup <fqdn>  lookup ip for fqdn\n");
 	printf("http <srv>[/p] http get request\n");
-	printf("sntp <o> [srv] get time from srv\n");
+	printf("sntp [o] [srv] get time from srv\n");
 	printf("rtc [<d> <t>]  get or set rtc\n");
 	exit(0);
 }
@@ -186,12 +186,26 @@ static void print_rtc_help(void)
 
 static void print_sntp_help(void)
 {
-	printf("Usage: .newt [-w] sntp <o> [srv]\n");
+	printf("Usage: .newt [-w] sntp [o] [srv]\n");
 	printf("       [-w]  write RTC\n");
-	printf("       <o>   offset in mins\n");
+	printf("       [o]   offset in mins\n");
 	printf("       [srv] server address\n");
 	
 	exit(0);
+}
+
+static bool is_numeric(const char *s)
+{
+	char *p = s;
+
+	if(*p == '-') p++;
+
+	do {
+		if((*p < '0') || (*p > '9')) return false;
+		p++;
+	} while(*p != 0);
+
+	return true;
 }
 
 int main(int argc, char **argv)
@@ -239,9 +253,17 @@ int main(int argc, char **argv)
 				if(argc >= (command_at + 3)) {
 					sntp_get(argv[command_at + 2], rtc, atol(argv[command_at + 1]));
 				} else if(argc >= (command_at + 2)) {
-					sntp_get(NULL, rtc, atol(argv[command_at + 1]));
+					if(is_numeric(argv[command_at + 1])) {
+						sntp_get(NULL, rtc, atol(argv[command_at + 1]));
+					} else {
+						if(strcmp(argv[command_at + 1], "help") == 0) {
+							print_sntp_help();
+						} else {
+							sntp_get(argv[command_at + 1], rtc, 0);
+						}
+					}
 				} else {
-					print_sntp_help();
+					sntp_get(NULL, rtc, 0);
 				}
 			}
 			
