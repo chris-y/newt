@@ -3,13 +3,17 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <sys/time.h>
 
 #include "c_gmtime.h"
 #include "error.h"
+#include "http.h"
+#include "main.h"
 #include "net.h"
 #include "rtc.h"
+#include "sntp.h"
 #include "timepr.h"
 #include "timer.h"
 
@@ -94,13 +98,33 @@ static void sntp_sync(bool w, int32_t offset)
 	free(pkt);
 }
 
+static int32_t sntp_guess_offset()
+{
+	int32_t offset = 0;
+	char buf[256];
+	
+	if(http_get("ip-api.com/line/?fields=status,message,offset", buf, 255)) {
+		char *b = http_strip_header(buf);
+		if(strncmp("success", b, 7) == 0) {
+			b += 8;
+			offset = atol(b);
+			if(!quiet) printf("Offset %ds\n", offset);
+		} else {
+			if(!quiet) printf("Offset guess failed:\n%s\n", b+8);
+			return 0;
+		}
+	}
+	
+	return offset / 60;
+}
+
 void sntp_get(unsigned char *server, bool rtc, int32_t offset)
 {
-	char ip[32];
 	unsigned int conn = 0;
 	unsigned char *srv = server;
 	if(srv == NULL) srv = "pool.ntp.org\0";
-	
+	if(offset == SNTP_OFFSET_GUESS) offset = sntp_guess_offset();
+
 	/* ensure no open connections */
 	net_close();
 	

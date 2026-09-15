@@ -259,11 +259,11 @@ int main(int argc, char **argv)
 						if(strcmp(argv[command_at + 1], "help") == 0) {
 							print_sntp_help();
 						} else {
-							sntp_get(argv[command_at + 1], rtc, 0);
+							sntp_get(argv[command_at + 1], rtc, SNTP_OFFSET_GUESS);
 						}
 					}
 				} else {
-					sntp_get(NULL, rtc, 0);
+					sntp_get(NULL, rtc, SNTP_OFFSET_GUESS);
 				}
 			}
 			
