@@ -189,6 +189,7 @@ static void print_sntp_help(void)
 	printf("Usage: .newt [-w] sntp [o] [srv]\n");
 	printf("       [-w]  write RTC\n");
 	printf("       [o]   offset in mins\n");
+	printf("             (or guessed)\n");
 	printf("       [srv] server address\n");
 	
 	exit(0);
