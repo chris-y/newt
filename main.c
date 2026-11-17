@@ -23,7 +23,7 @@
 #include "uart.h" // for IO_153B
 
 #define RTM_28MHZ 3 // from manual
-#define NEWT_VER "0.2"
+#define NEWT_VER "0.3"
 
 static unsigned char old_cpu_speed;
 static unsigned char old_uart;
