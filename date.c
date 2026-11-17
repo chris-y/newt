@@ -13,7 +13,7 @@ static int str_to_num(char **str, char del)
 
 	if(p == NULL) return 0;
 
-    while ((*p != del) && (*p != '\0')) {
+	while ((*p != del) && (*p != '\0')) {
 		t[i] = *p - '0';
 		i++;
 		p++;
@@ -25,7 +25,7 @@ static int str_to_num(char **str, char del)
 		n = (n * 10) + t[x];
 	}
 	
-	p++;
+	if(*p != '\0') p++;
 	*str = p;
 	return n;
 }
@@ -43,7 +43,9 @@ void datetime_to_tm(char *date, char *time, struct tm *tms)
 	int s = 0;
 
 	day = str_to_num(&p, '/');
+	if((day < 1) || (day > 31)) day = 1;
 	mon = str_to_num(&p, '/');
+	if((mon < 1) || (mon > 12)) mon = 1;
 	yr = str_to_num(&p, '/');
 	
 	tms->tm_mday = day;

@@ -10,7 +10,12 @@
 
 char *http_strip_header(unsigned char *buf)
 {
-	return strstr(buf, "\r\n\r\n") + 4;
+	char *body = strstr(buf, "\r\n\r\n") + 4;
+	if(body) {
+		return body;
+	} else {
+		return buf;
+	}
 }
 
 bool http_get(unsigned char *req, unsigned char *buf, unsigned int buf_size)

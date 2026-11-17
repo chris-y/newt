@@ -43,7 +43,7 @@ void user_break(void)
 
 static void cleanup(void)
 {
-	ZXN_NEXTREGA(REG_TURBO_MODE, old_cpu_speed);
+	ZXN_NEXTREGA(REG_TURBO_MODE, old_cpu_speed & 0x03);
 	IO_153B = old_uart;
 }
 
@@ -51,8 +51,8 @@ static void print_usage(void)
 {
 	printf(".newt [-qvw] <command> [args]\n\n");
 	printf("-q             quiet\n");
-    printf("-v             verbose\n");
-    printf("-w             write rtc\n");
+	printf("-v             verbose\n");
+	printf("-w             write rtc\n");
 	printf("\nCommands:\n");
 	printf("ip             show ip addr\n");
 	printf("info           show esp firmware\n");
@@ -229,16 +229,21 @@ int main(int argc, char **argv)
 
 	if(argc >= 2) {
 		if(argv[1][0] == '-') {
-				if(argv[1][1] == 'q') quiet = true;
-				if(argv[1][1] == 'v') {
-						quiet = false; /* can't be quiet and verbose simultaneously */
-						verbose = true;
+			for(int i = 1; argv[1][i] != '\0'; i++) {
+				if(argv[1][i] == 'q') {
+					quiet = true;
+					verbose = false;
 				}
-				if((argv[1][1] == 'w') || ((argv[1][1] != '\0') && ((argv[1][2] == 'w')))) {
+				if(argv[1][i] == 'v') {
+					quiet = false; /* can't be quiet and verbose simultaneously */
+					verbose = true;
+				}
+				if(argv[1][i] == 'w') {
 					rtc = true;
 				}
 				command_at = 2;
 			}
+		}
 
 		if(!quiet) printf("newt %s by Chris Young 2025-6\nhttps://github.com/chris-y/newt\n\n", NEWT_VER);
 
@@ -249,7 +254,7 @@ int main(int argc, char **argv)
 				if(!quiet) printf("ESP information:\n");
 				print_cmd(at_gmr);
 			}
-			
+
 			if(stricmp(argv[command_at], "sntp") == 0) {
 				if(argc >= (command_at + 3)) {
 					sntp_get(argv[command_at + 2], rtc, atol(argv[command_at + 1]));
@@ -270,7 +275,7 @@ int main(int argc, char **argv)
 			
 			if(stricmp(argv[command_at], "rtc") == 0) {
 				if(rtc) {
-					if((argc >= (command_at + 2))) {
+					if((argc >= (command_at + 3))) {
 						struct tm tms;
 						datetime_to_tm(argv[command_at + 1], argv[command_at + 2], &tms);
 						if(!quiet) {

@@ -36,7 +36,7 @@ static void net_send_bin(unsigned char *data, unsigned int size)
         uart_flush_read_buffer();
 	if(verbose) {
 		printf(">> ");
-		unsigned int i = size;
+		unsigned int i = 0;
 		while(i < size) {
 			printf("%x ", data[i]);
 			i++;
@@ -119,16 +119,15 @@ unsigned int net_recv_stripped(unsigned char *result, unsigned int result_size, 
 
 bool net_lookup(unsigned char *hostname, unsigned char *ip, unsigned int ip_size)
 {
-        unsigned char cmd_opt[100] = "AT+CIPDOMAIN=\"";
+        unsigned char cmd_opt[100];
 	unsigned char strip[] = "+CIPDOMAIN:";
 	unsigned int bytes = 0;
-	
-        strcat(cmd_opt, hostname);
-        strcat(cmd_opt, "\"\r\n\0");
+
+        snprintf(cmd_opt, 100, "AT+CIPDOMAIN=\"%s\"\r\n", hostname);
 
 	net_send(cmd_opt);
         bytes = net_recv_stripped(ip, ip_size, strip);
-	
+
 	if(bytes) {
 		ip[strlen(ip)-2] = '\0';
 		return true;
@@ -137,9 +136,11 @@ bool net_lookup(unsigned char *hostname, unsigned char *ip, unsigned int ip_size
 	}
 }
 
+#define NEWT_NETCONN_BUF_SIZE 64
+
 static bool net_connect(unsigned char *ip, unsigned int port, bool tcp)
 {
-	unsigned char buf[64];
+	unsigned char buf[NEWT_NETCONN_BUF_SIZE];
 	unsigned int bytes_read;
 	char conn_type[4] = "UDP\0";
 	
@@ -150,10 +151,10 @@ static bool net_connect(unsigned char *ip, unsigned int port, bool tcp)
 		conn_type[1] = 'C';
 	}
 	
-	snprintf(buf, 64, "AT+CIPSTART=\"%s\",\"%s\",%u\r\n", conn_type, ip, port);
+	snprintf(buf, NEWT_NETCONN_BUF_SIZE, "AT+CIPSTART=\"%s\",\"%s\",%u\r\n", conn_type, ip, port);
 	
 	net_send(buf);
-	bytes_read = net_recv_line(buf, 64);
+	bytes_read = net_recv_line(buf, NEWT_NETCONN_BUF_SIZE);
 	if(bytes_read != 0) {
 		if(strncmp(buf, "CONNECT", 7) == 0) {
 			return(true);
@@ -212,7 +213,7 @@ unsigned int net_recv_data(unsigned char *data, unsigned int size)
 		data[i] = uart_rx();
 		if(verbose) printf("%c", data[i]);
 		i++;
-	} while(data[i-1] != ':');
+	} while((i < size) && (data[i-1] != ':'));
 
 	bytes_rx = atoi(data + 5); // convert ascii to decimal
 	

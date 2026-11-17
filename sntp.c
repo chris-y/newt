@@ -46,10 +46,12 @@ struct ntp_pkt {
 #define SWAP_ENDIAN(VAL) (((0xFF000000 & VAL) >> 24) | ((0x00FF0000 & VAL) >> 8) | \
 						((0x0000FF00 & VAL) << 8) | ((0x000000FF & VAL) << 24))
 
-#define NTP_TO_UNIX_EPOCH(E) (SWAP_ENDIAN(E)-2208988800L)
+#define SECS_TO_NTP_EPOCH 2208988800UL
+
+#define NTP_TO_UNIX_EPOCH(E) (SWAP_ENDIAN(E)-SECS_TO_NTP_EPOCH)
 
 #define ZX_TIMER_NTP_S SWAP_ENDIAN((uint32_t)(ZX_TIMER / 50))
-#define NANO_TO_ZX_TIMER(N) (uint32_t)((uint64_t)(N*50)/10^9)
+#define NANO_TO_ZX_TIMER(N) (uint32_t)((uint64_t)(N*50)/1000000000)
 
 /* Convert to NTP fraction - this is in 1/50ths */
 #define ZX_TIMER_NTP_F SWAP_ENDIAN((uint32_t)(((uint64_t)(ZX_TIMER % 50) << 32) / 50))
@@ -58,14 +60,14 @@ static void sntp_sync(bool w, int32_t offset)
 {
 	struct ntp_pkt *pkt = calloc(sizeof(struct ntp_pkt), 1);
 	unsigned char *rpkt = (unsigned char *)pkt;
-	uint32_t o = offset * 60;
+	int32_t o = offset * 60;
 
 	if(pkt == NULL) exit((int)err_mem);
 	
 	SET_NTP_VN(pkt, 4); /* Version 4 */
 	SET_NTP_MODE(pkt, 3); /* Client */
 
-	time_t rtc = rtc_get_time();
+	time_t rtc = rtc_get_time() + SECS_TO_NTP_EPOCH;
 	
 	if(rtc == 0) {
 		pkt->transmit_time_s = ZX_TIMER_NTP_S;
@@ -79,6 +81,11 @@ static void sntp_sync(bool w, int32_t offset)
 	
 	net_recv_data(pkt, sizeof(struct ntp_pkt));
 	
+	if(GET_NTP_MODE(pkt) != 4) { // server
+		printf("Error\n");
+		exit(0);
+	}
+
 	if(pkt->stratum == 0) { // Kiss-o'-Death
 		unsigned char *kod = (unsigned char *)&pkt->reference_id;
 		printf("Kiss-o'-Death: %c%c%c%c\n", kod[0], kod[1], kod[2], kod[3]);
@@ -108,7 +115,7 @@ static int32_t sntp_guess_offset()
 		if(strncmp("success", b, 7) == 0) {
 			b += 8;
 			offset = atol(b);
-			if(!quiet) printf("Offset %ds\n", offset);
+			if(!quiet) printf("Offset %lds\n", offset);
 		} else {
 			if(!quiet) printf("Offset guess failed:\n%s\n", b+8);
 			return 0;
